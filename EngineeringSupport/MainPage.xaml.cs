@@ -1,5 +1,6 @@
-﻿namespace EngineeringSupport;
-using Velopack;
+﻿using Velopack;
+using Velopack.Sources;
+namespace EngineeringSupport;
 public partial class MainPage : ContentPage
 {
     int _count;
@@ -69,7 +70,7 @@ public partial class MainPage : ContentPage
         allowPrerelease = false;
 #endif
 
-        var mgr = new UpdateManager(new GithubSource(repoUrl, null, allowPrerelease), channel);
+        var mgr = new UpdateManager(new GithubSource(repoUrl, null, allowPrerelease), new UpdateOptions { ExplicitChannel = channel });
 
         var newVersion = await mgr.CheckForUpdatesAsync();
         if (newVersion == null) return;
