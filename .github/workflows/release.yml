@@ -40,6 +40,7 @@ jobs:
             -r win-x64 `
             --self-contained true `
             --configfile NuGet.Config `
+            --ignore-failed-sources `
             -p:WindowsPackageType=None `
             -p:Platform=x64 `
             -o ./publish
@@ -131,6 +132,7 @@ jobs:
             -r osx-x64 \
             --self-contained true \
             --configfile NuGet.Config \
+            --ignore-failed-sources \
             -o ./publish
 
       - name: Velopack Pack (Mac)
