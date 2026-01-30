@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="EngineeringSupport.MainPage">
+
+    <ScrollView>
+        <VerticalStackLayout Style="{StaticResource MainContainer}">
+            <Border Style="{StaticResource CardStyle}">
+                <VerticalStackLayout Spacing="15">
+                    <Image
+                        Source="dotnet_bot.png"
+                        HeightRequest="150"
+                        Aspect="AspectFit"
+                        SemanticProperties.Description="dot net bot in a submarine" />
+
+                    <Label
+                        Text="Modern MAUI Layout"
+                        Style="{StaticResource Headline}" />
+
+                    <Label
+                        Text="This is a card-based layout that adapts to light and dark modes seamlessly."
+                        Style="{StaticResource BodyText}"
+                        HorizontalTextAlignment="Center" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource CardStyle}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Quick Actions" Style="{StaticResource SubHeadline}" HorizontalOptions="Start" />
+                    
+                    <Button
+                        x:Name="CounterBtn"
+                        Text="Increment Counter" 
+                        Clicked="OnCounterClicked"
+                        HorizontalOptions="Fill" />
+                    
+                    <Label 
+                        Text="Last updated: Just now" 
+                        Style="{StaticResource CaptionText}" 
+                        HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
