@@ -31,7 +31,7 @@ jobs:
 
       - name: Publish WinUI
         run: |
-          dotnet publish EngineeringSupporter.WinUI/EngineeringSupporter.WinUI.csproj `
+          dotnet publish EngineeringSupport.WinUI/EngineeringSupport.WinUI.csproj `
             -c Release `
             -f net10.0-windows10.0.19041.0 `
             -r win-x64 `
@@ -45,23 +45,19 @@ jobs:
         shell: bash
         run: |
           if [[ "${{ github.ref_type }}" == "tag" ]]; then
-            # Strip 'v' prefix if exists
             VERSION="${GITHUB_REF_NAME#v}"
           elif [[ "${{ github.ref_name }}" == "main" ]]; then
-            # Use a dummy version for main branch
             VERSION="0.0.1-main-${GITHUB_SHA::7}"
           elif [[ "${{ github.ref_name }}" == "develop" ]]; then
-            # Use a dummy version for develop branch (Development)
             VERSION="0.0.1-dev-${GITHUB_SHA::7}"
           else
-            # Fallback for manual trigger
             VERSION="0.0.1-manual"
           fi
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Velopack Pack
         run: |
-          vpk pack -u EngineeringSupporter -v ${{ steps.version.outputs.version }} -p ./publish -e EngineeringSupporter.WinUI.exe --packTitle "EngineeringSupporter"
+          vpk pack -u EngineeringSupport -v ${{ steps.version.outputs.version }} -p ./publish -e EngineeringSupport.exe --packTitle "EngineeringSupport"
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
@@ -69,12 +65,86 @@ jobs:
           name: windows-releases
           path: ./Releases/*
 
+  build-mac:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Apple Certificate
+        env:
+          CERT_P12: ${{ secrets.MACOS_CERTIFICATE }}
+          CERT_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+        run: |
+          echo $CERT_P12 | base64 --decode > certificate.p12
+          security create-keychain -p "" build.keychain
+          security import certificate.p12 -k build.keychain -P "$CERT_PWD" -T /usr/bin/codesign
+          security list-keychains -s build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "" build.keychain
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install MAUI workload
+        run: dotnet workload install maui
+
+      - name: Install Velopack CLI
+        run: dotnet tool install -g vpk
+
+      - name: Determine Version
+        id: version
+        shell: bash
+        run: |
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          elif [[ "${{ github.ref_name }}" == "main" ]]; then
+            VERSION="0.0.1-main-${GITHUB_SHA::7}"
+          elif [[ "${{ github.ref_name }}" == "develop" ]]; then
+            VERSION="0.0.1-dev-${GITHUB_SHA::7}"
+          else
+            VERSION="0.0.1-manual"
+          fi
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Publish Mac
+        run: |
+          dotnet publish EngineeringSupport/EngineeringSupport.csproj \
+            -c Release \
+            -f net10.0-maccatalyst \
+            -r osx-x64 \
+            --self-contained true \
+            -o ./publish
+
+      - name: Velopack Pack (Mac)
+        run: |
+          echo "${{ secrets.APPLE_KEY_CONTENT }}" | base64 --decode > ./apple_key.p8
+          vpk pack -u EngineeringSupport \
+            -v ${{ steps.version.outputs.version }} \
+            -p ./publish \
+            -e EngineeringSupport.app \
+            --packTitle "EngineeringSupport" \
+            --appleId "${{ secrets.APPLE_KEY_ID }}" \
+            --appleIssuer "${{ secrets.APPLE_ISSUER_ID }}" \
+            --appleKey "./apple_key.p8"
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mac-releases
+          path: ./Releases/*
+
   release:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/v') || github.ref_name == 'main' || github.ref_name == 'develop')
     permissions:
       contents: write
-    needs: [build-windows]
+    needs: [build-windows, build-mac]
     steps:
       - name: Download Artifacts
         uses: actions/download-artifact@v4
@@ -86,16 +156,12 @@ jobs:
         shell: bash
         run: |
           if [[ "${{ github.ref_type }}" == "tag" ]]; then
-            # Strip 'v' prefix if exists
             VERSION="${GITHUB_REF_NAME#v}"
           elif [[ "${{ github.ref_name }}" == "main" ]]; then
-            # Use a dummy version for main branch
             VERSION="0.0.1-main-${GITHUB_SHA::7}"
           elif [[ "${{ github.ref_name }}" == "develop" ]]; then
-            # Use a dummy version for develop branch (Development)
             VERSION="0.0.1-dev-${GITHUB_SHA::7}"
           else
-            # Fallback for manual trigger
             VERSION="0.0.1-manual"
           fi
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
@@ -110,5 +176,6 @@ jobs:
           prerelease: ${{ github.ref_name == 'develop' }}
           files: |
             ./artifacts/windows-releases/*
+            ./artifacts/mac-releases/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
