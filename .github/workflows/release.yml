@@ -9,6 +9,9 @@ on:
       - 'v*'
   workflow_dispatch:
 
+env:
+  MAJOR_MINOR_VERSION: "0.0" # ここを手動で更新することでメジャー/マイナーを変更可能
+
 jobs:
   build-windows:
     runs-on: windows-latest
@@ -47,12 +50,16 @@ jobs:
         run: |
           if [[ "${{ github.ref_type }}" == "tag" ]]; then
             VERSION="${GITHUB_REF_NAME#v}"
-          elif [[ "${{ github.ref_name }}" == "main" ]]; then
-            VERSION="0.0.1-main-${GITHUB_SHA::7}"
-          elif [[ "${{ github.ref_name }}" == "develop" ]]; then
-            VERSION="0.0.1-dev-${GITHUB_SHA::7}"
           else
-            VERSION="0.0.1-manual"
+            # 0.0.X の形式で、Xにgithub.run_numberを使用
+            BASE_VERSION="${{ env.MAJOR_MINOR_VERSION }}.${{ github.run_number }}"
+            if [[ "${{ github.ref_name }}" == "main" ]]; then
+              VERSION="${BASE_VERSION}"
+            elif [[ "${{ github.ref_name }}" == "develop" ]]; then
+              VERSION="${BASE_VERSION}-dev"
+            else
+              VERSION="${BASE_VERSION}-manual"
+            fi
           fi
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
 
@@ -104,12 +111,15 @@ jobs:
         run: |
           if [[ "${{ github.ref_type }}" == "tag" ]]; then
             VERSION="${GITHUB_REF_NAME#v}"
-          elif [[ "${{ github.ref_name }}" == "main" ]]; then
-            VERSION="0.0.1-main-${GITHUB_SHA::7}"
-          elif [[ "${{ github.ref_name }}" == "develop" ]]; then
-            VERSION="0.0.1-dev-${GITHUB_SHA::7}"
           else
-            VERSION="0.0.1-manual"
+            BASE_VERSION="${{ env.MAJOR_MINOR_VERSION }}.${{ github.run_number }}"
+            if [[ "${{ github.ref_name }}" == "main" ]]; then
+              VERSION="${BASE_VERSION}"
+            elif [[ "${{ github.ref_name }}" == "develop" ]]; then
+              VERSION="${BASE_VERSION}-dev"
+            else
+              VERSION="${BASE_VERSION}-manual"
+            fi
           fi
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
 
@@ -160,12 +170,15 @@ jobs:
         run: |
           if [[ "${{ github.ref_type }}" == "tag" ]]; then
             VERSION="${GITHUB_REF_NAME#v}"
-          elif [[ "${{ github.ref_name }}" == "main" ]]; then
-            VERSION="0.0.1-main-${GITHUB_SHA::7}"
-          elif [[ "${{ github.ref_name }}" == "develop" ]]; then
-            VERSION="0.0.1-dev-${GITHUB_SHA::7}"
           else
-            VERSION="0.0.1-manual"
+            BASE_VERSION="${{ env.MAJOR_MINOR_VERSION }}.${{ github.run_number }}"
+            if [[ "${{ github.ref_name }}" == "main" ]]; then
+              VERSION="${BASE_VERSION}"
+            elif [[ "${{ github.ref_name }}" == "develop" ]]; then
+              VERSION="${BASE_VERSION}-dev"
+            else
+              VERSION="${BASE_VERSION}-manual"
+            fi
           fi
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
 
@@ -173,7 +186,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.event_name == 'push' && (github.ref_type == 'tag' || github.ref_name == 'main' || github.ref_name == 'develop')
         with:
-          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || format('v0.0.1-{0}-{1}', github.ref_name, github.sha) }}
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || format('v{0}.{1}-{2}', env.MAJOR_MINOR_VERSION, github.run_number, github.ref_name) }}
           name: Release ${{ steps.version.outputs.version }}
           draft: false
           prerelease: ${{ github.ref_name == 'develop' }}
