@@ -129,8 +129,8 @@ jobs:
           dotnet publish EngineeringSupport.Mac/EngineeringSupport.Mac.csproj \
             -c Release \
             -f net10.0-maccatalyst \
-            -r osx-x64 \
-            --self-contained true \
+            -r osx-arm64 \
+            --self-contained false \
             --configfile NuGet.Config \
             --ignore-failed-sources \
             -o ./publish
