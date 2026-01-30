@@ -43,8 +43,33 @@ public partial class MainPage : ContentPage
     /// </summary>
     public async Task UpdateMyApp()
     {
-        string updateUrl = "https://your-update-server.com/releases";
-        var mgr = new UpdateManager(updateUrl);
+        // GitHub のリポジトリURL（ユーザー名/リポジトリ名）
+        // 実際の運用に合わせて書き換えてください
+        string repoUrl = "https://github.com/ryokugyoku/EngineeringSupport";
+        
+        // 開発ビルドか本番ビルドかに応じて、対象のタグやリリーストラックを切り替えることが可能です。
+        // ここでは例として、プレリリースを含めるかどうかで開発/本番を分ける構成にします。
+        bool allowPrerelease = false;
+        string channel = "";
+
+        if (DeviceInfo.Current.Platform == DevicePlatform.WinUI)
+        {
+            channel = "win";
+        }
+        else if (DeviceInfo.Current.Platform == DevicePlatform.MacCatalyst)
+        {
+            channel = "osx";
+        }
+
+#if DEBUG
+        // 開発中はプレリリース（developブランチからのビルドなど）を含める
+        allowPrerelease = true;
+#else
+        // 本番（Releaseビルド）は正式リリースのみ対象にする
+        allowPrerelease = false;
+#endif
+
+        var mgr = new UpdateManager(new GithubSource(repoUrl, null, allowPrerelease), channel);
 
         var newVersion = await mgr.CheckForUpdatesAsync();
         if (newVersion == null) return;

@@ -36,6 +36,7 @@ jobs:
             -f net10.0-windows10.0.19041.0 `
             -r win-x64 `
             --self-contained true `
+            --configfile NuGet.Config `
             -p:WindowsPackageType=None `
             -p:Platform=x64 `
             -o ./publish
@@ -57,7 +58,7 @@ jobs:
 
       - name: Velopack Pack
         run: |
-          vpk pack -u EngineeringSupport -v ${{ steps.version.outputs.version }} -p ./publish -e EngineeringSupport.WinUI.exe --packTitle "EngineeringSupport"
+          vpk pack -u EngineeringSupport -v ${{ steps.version.outputs.version }} -p ./publish -e EngineeringSupport.WinUI.exe --packTitle "EngineeringSupport" --channel win
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
@@ -119,6 +120,7 @@ jobs:
             -f net10.0-maccatalyst \
             -r osx-x64 \
             --self-contained true \
+            --configfile NuGet.Config \
             -o ./publish
 
       - name: Velopack Pack (Mac)
@@ -129,6 +131,7 @@ jobs:
             -p ./publish \
             -e EngineeringSupport.Mac.app \
             --packTitle "EngineeringSupport" \
+            --channel osx \
             --appleId "${{ secrets.APPLE_KEY_ID }}" \
             --appleIssuer "${{ secrets.APPLE_ISSUER_ID }}" \
             --appleKey "./apple_key.p8"
