@@ -57,7 +57,7 @@ jobs:
 
       - name: Velopack Pack
         run: |
-          vpk pack -u EngineeringSupport -v ${{ steps.version.outputs.version }} -p ./publish -e EngineeringSupport.exe --packTitle "EngineeringSupport"
+          vpk pack -u EngineeringSupport -v ${{ steps.version.outputs.version }} -p ./publish -e EngineeringSupport.WinUI.exe --packTitle "EngineeringSupport"
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
@@ -114,7 +114,7 @@ jobs:
 
       - name: Publish Mac
         run: |
-          dotnet publish EngineeringSupport/EngineeringSupport.csproj \
+          dotnet publish EngineeringSupport.Mac/EngineeringSupport.Mac.csproj \
             -c Release \
             -f net10.0-maccatalyst \
             -r osx-x64 \
@@ -127,7 +127,7 @@ jobs:
           vpk pack -u EngineeringSupport \
             -v ${{ steps.version.outputs.version }} \
             -p ./publish \
-            -e EngineeringSupport.app \
+            -e EngineeringSupport.Mac.app \
             --packTitle "EngineeringSupport" \
             --appleId "${{ secrets.APPLE_KEY_ID }}" \
             --appleIssuer "${{ secrets.APPLE_ISSUER_ID }}" \
